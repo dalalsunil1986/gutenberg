@@ -43,6 +43,10 @@ export default class Picker extends Component {
 	}
 
 	onClose() {
+		const { onClose } = this.props;
+		if ( onClose ) {
+			onClose();
+		}
 		this.setState( { isVisible: false } );
 	}
 
