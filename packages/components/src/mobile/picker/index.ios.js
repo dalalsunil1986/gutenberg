@@ -18,6 +18,7 @@ class Picker extends Component {
 			destructiveButtonIndex,
 			disabledButtonIndices,
 			anchor,
+			onClose,
 		} = this.props;
 		const labels = options.map( ( { label } ) => label );
 		const fullOptions = [ __( 'Cancel' ) ].concat( labels );
@@ -33,8 +34,10 @@ class Picker extends Component {
 			},
 			( buttonIndex ) => {
 				if ( buttonIndex === 0 ) {
+					onClose();
 					return;
 				}
+
 				const selected = options[ buttonIndex - 1 ];
 				onChange( selected.value );
 			}
