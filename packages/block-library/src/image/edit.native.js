@@ -407,6 +407,7 @@ export class ImageEdit extends React.Component {
 						onSelect={ this.onSelectMediaUploadOption }
 						icon={ this.getPlaceholderIcon() }
 						onFocus={ this.props.onFocus }
+						autoOpenMediaOptions={ true }
 					/>
 				</View>
 			);
