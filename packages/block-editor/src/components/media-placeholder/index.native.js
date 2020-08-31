@@ -48,6 +48,7 @@ function MediaPlaceholder( props ) {
 		backgroundColor,
 		hideContent,
 		autoOpenMediaOptions,
+		onClose,
 	} = props;
 
 	// use ref to keep media array current for callbacks during rerenders
@@ -152,6 +153,7 @@ function MediaPlaceholder( props ) {
 					__experimentalOnlyMediaLibrary
 				}
 				multiple={ multiple }
+				onClose= { onClose }
 				isReplacingMedia={ false }
 				render={ ( { open, getMediaOptions } ) => {
 					return (
