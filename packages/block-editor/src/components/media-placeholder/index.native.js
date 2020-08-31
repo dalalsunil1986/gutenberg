@@ -153,7 +153,7 @@ function MediaPlaceholder( props ) {
 					__experimentalOnlyMediaLibrary
 				}
 				multiple={ multiple }
-				onClose= { onClose }
+				onClose={ onClose }
 				isReplacingMedia={ false }
 				render={ ( { open, getMediaOptions } ) => {
 					return (
