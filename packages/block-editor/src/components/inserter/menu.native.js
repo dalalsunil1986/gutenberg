@@ -18,6 +18,7 @@ import { createBlock, rawHandler } from '@wordpress/blocks';
 import { withDispatch, withSelect } from '@wordpress/data';
 import { withInstanceId, compose } from '@wordpress/compose';
 import { BottomSheet, BottomSheetConsumer } from '@wordpress/components';
+import { doAction } from '@wordpress/hooks';
 
 /**
  * Internal dependencies
@@ -262,6 +263,10 @@ export default compose(
 					initialAttributes,
 					innerBlocks
 				);
+
+				if ( name === 'core/image' ) {
+					doAction( 'blocks.onImageBlockAdded' );
+				}
 
 				insertBlock(
 					insertedBlock,
