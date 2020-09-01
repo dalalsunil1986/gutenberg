@@ -48,6 +48,7 @@ function MediaPlaceholder( props ) {
 		backgroundColor,
 		hideContent,
 		autoOpenMediaOptions,
+		onOpen,
 		onClose,
 	} = props;
 
@@ -153,6 +154,7 @@ function MediaPlaceholder( props ) {
 					__experimentalOnlyMediaLibrary
 				}
 				multiple={ multiple }
+				onOpen={ onOpen }
 				onClose={ onClose }
 				isReplacingMedia={ false }
 				render={ ( { open, getMediaOptions } ) => {
