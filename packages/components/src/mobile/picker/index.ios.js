@@ -18,6 +18,7 @@ class Picker extends Component {
 			destructiveButtonIndex,
 			disabledButtonIndices,
 			anchor,
+			onOpen,
 			onClose,
 		} = this.props;
 		const labels = options.map( ( { label } ) => label );
@@ -42,6 +43,9 @@ class Picker extends Component {
 				onChange( selected.value );
 			}
 		);
+		if ( onOpen ) {
+			onOpen();
+		}
 	}
 
 	render() {

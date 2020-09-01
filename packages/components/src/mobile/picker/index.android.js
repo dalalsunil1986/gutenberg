@@ -40,6 +40,10 @@ export default class Picker extends Component {
 
 	presentPicker() {
 		this.setState( { isVisible: true } );
+		const { onOpen } = this.props;
+		if ( onOpen ) {
+			onOpen();
+		}
 	}
 
 	onClose() {
