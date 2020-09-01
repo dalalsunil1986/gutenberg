@@ -39,7 +39,7 @@ import { __, sprintf } from '@wordpress/i18n';
 import { getProtocol } from '@wordpress/url';
 import { doAction, hasAction } from '@wordpress/hooks';
 import { compose, withPreferredColorScheme } from '@wordpress/compose';
-import { withSelect } from '@wordpress/data';
+import { withSelect, withDispatch } from '@wordpress/data';
 import {
 	external,
 	link,
@@ -88,6 +88,9 @@ export class ImageEdit extends React.Component {
 		this.onFocusCaption = this.onFocusCaption.bind( this );
 		this.updateAlignment = this.updateAlignment.bind( this );
 		this.accessibilityLabelCreator = this.accessibilityLabelCreator.bind(
+			this
+		);
+		this.onMediaUploadBottomSheetClosed = this.onMediaUploadBottomSheetClosed.bind(
 			this
 		);
 	}
@@ -268,6 +271,12 @@ export class ImageEdit extends React.Component {
 		} );
 	}
 
+	onMediaUploadBottomSheetClosed() {
+		const { wasMediaUploadOptionBottomSheetOpened } = this.state;
+		if ( wasMediaUploadOptionBottomSheetOpened === false ) {
+			this.props.undo();
+		}
+	}
 	onSelectMediaUploadOption( media ) {
 		const { id, url } = this.props.attributes;
 
@@ -408,6 +417,7 @@ export class ImageEdit extends React.Component {
 						icon={ this.getPlaceholderIcon() }
 						onFocus={ this.props.onFocus }
 						autoOpenMediaOptions={ true }
+						onClose={ this.onMediaUploadBottomSheetClosed }
 					/>
 				</View>
 			);
@@ -516,6 +526,11 @@ export default compose( [
 		return {
 			image: shouldGetMedia ? getMedia( id ) : null,
 			imageSizes,
+		};
+	} ),
+	withDispatch( ( dispatch ) => {
+		return {
+			undo: dispatch( 'core/editor' ).undo,
 		};
 	} ),
 	withPreferredColorScheme,
