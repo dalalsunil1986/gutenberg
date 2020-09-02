@@ -37,7 +37,7 @@ import {
 } from '@wordpress/block-editor';
 import { __, sprintf } from '@wordpress/i18n';
 import { getProtocol } from '@wordpress/url';
-import { doAction, addAction, hasAction, removeAction } from '@wordpress/hooks';
+import { doAction, hasAction } from '@wordpress/hooks';
 import { compose, withPreferredColorScheme } from '@wordpress/compose';
 import { withSelect, withDispatch } from '@wordpress/data';
 import {
@@ -98,7 +98,6 @@ export class ImageEdit extends React.Component {
 		this.onMediaUploadBottomSheetOpened = this.onMediaUploadBottomSheetOpened.bind(
 			this
 		);
-		this.onImageBlockAddedEvent = this.onImageBlockAddedEvent.bind( this );
 	}
 
 	componentDidMount() {
@@ -134,12 +133,6 @@ export class ImageEdit extends React.Component {
 		) {
 			mediaUploadSync();
 		}
-
-		addAction(
-			'blocks.onImageBlockAdded',
-			'gutenberg-mobile/blocks',
-			this.onImageBlockAddedEvent
-		);
 	}
 
 	componentWillUnmount() {
@@ -291,21 +284,6 @@ export class ImageEdit extends React.Component {
 	}
 
 	onMediaUploadBottomSheetOpened() {}
-
-	onImageBlockAddedEvent() {
-		if ( hasAction( 'blocks.onImageBlockAdded' ) ) {
-			// remove the action as it's a one-shot use and won't be needed anymore
-			removeAction(
-				'blocks.onImageBlockAdded',
-				'gutenberg-mobile/blocks'
-			);
-
-			this.setState( {
-				autoOpenMediaOptions: true,
-				autoRemoveEmptyImageBlock: true,
-			} );
-		}
-	}
 
 	onSelectMediaUploadOption( media ) {
 		const { id, url } = this.props.attributes;
