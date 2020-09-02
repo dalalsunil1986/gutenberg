@@ -37,7 +37,7 @@ import {
 } from '@wordpress/block-editor';
 import { __, sprintf } from '@wordpress/i18n';
 import { getProtocol } from '@wordpress/url';
-import { doAction, hasAction } from '@wordpress/hooks';
+import { doAction, addAction, hasAction, removeAction } from '@wordpress/hooks';
 import { compose, withPreferredColorScheme } from '@wordpress/compose';
 import { withSelect, withDispatch } from '@wordpress/data';
 import {
@@ -66,6 +66,8 @@ export class ImageEdit extends React.Component {
 
 		this.state = {
 			isCaptionSelected: false,
+			autoOpenMediaOptions: false,
+			autoRemoveEmptyImageBlock: false,
 		};
 
 		this.finishMediaUploadWithSuccess = this.finishMediaUploadWithSuccess.bind(
@@ -93,6 +95,10 @@ export class ImageEdit extends React.Component {
 		this.onMediaUploadBottomSheetClosed = this.onMediaUploadBottomSheetClosed.bind(
 			this
 		);
+		this.onMediaUploadBottomSheetOpened = this.onMediaUploadBottomSheetOpened.bind(
+			this
+		);
+		this.onImageBlockAddedEvent = this.onImageBlockAddedEvent.bind( this );
 	}
 
 	componentDidMount() {
@@ -128,6 +134,12 @@ export class ImageEdit extends React.Component {
 		) {
 			mediaUploadSync();
 		}
+
+		addAction(
+			'blocks.onImageBlockAdded',
+			'gutenberg-mobile/blocks',
+			this.onImageBlockAddedEvent
+		);
 	}
 
 	componentWillUnmount() {
@@ -272,11 +284,29 @@ export class ImageEdit extends React.Component {
 	}
 
 	onMediaUploadBottomSheetClosed() {
-		const { wasMediaUploadOptionBottomSheetOpened } = this.state;
-		if ( wasMediaUploadOptionBottomSheetOpened === false ) {
+		if ( this.state.autoRemoveEmptyImageBlock ) {
+			this.setState( { autoRemoveEmptyImageBlock: false } );
 			this.props.undo();
 		}
 	}
+
+	onMediaUploadBottomSheetOpened() {}
+
+	onImageBlockAddedEvent() {
+		if ( hasAction( 'blocks.onImageBlockAdded' ) ) {
+			// remove the action as it's a one-shot use and won't be needed anymore
+			removeAction(
+				'blocks.onImageBlockAdded',
+				'gutenberg-mobile/blocks'
+			);
+
+			this.setState( {
+				autoOpenMediaOptions: true,
+				autoRemoveEmptyImageBlock: true,
+			} );
+		}
+	}
+
 	onSelectMediaUploadOption( media ) {
 		const { id, url } = this.props.attributes;
 
@@ -329,7 +359,7 @@ export class ImageEdit extends React.Component {
 	}
 
 	render() {
-		const { isCaptionSelected } = this.state;
+		const { isCaptionSelected, autoOpenMediaOptions } = this.state;
 		const { attributes, isSelected, image, imageSizes } = this.props;
 		const {
 			align,
@@ -416,7 +446,8 @@ export class ImageEdit extends React.Component {
 						onSelect={ this.onSelectMediaUploadOption }
 						icon={ this.getPlaceholderIcon() }
 						onFocus={ this.props.onFocus }
-						autoOpenMediaOptions={ true }
+						autoOpenMediaOptions={ autoOpenMediaOptions }
+						onOpen={ this.onMediaUploadBottomSheetOpened }
 						onClose={ this.onMediaUploadBottomSheetClosed }
 					/>
 				</View>
