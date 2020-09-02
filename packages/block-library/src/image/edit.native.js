@@ -64,10 +64,13 @@ export class ImageEdit extends React.Component {
 	constructor( props ) {
 		super( props );
 
+		const { attributes, isSelected } = this.props;
+		const { url } = attributes;
+		const autoOpenMediaOptions = isSelected && ! url;
 		this.state = {
 			isCaptionSelected: false,
-			autoOpenMediaOptions: false,
-			autoRemoveEmptyImageBlock: false,
+			autoOpenMediaOptions,
+			autoRemoveEmptyImageBlock: autoOpenMediaOptions,
 		};
 
 		this.finishMediaUploadWithSuccess = this.finishMediaUploadWithSuccess.bind(
