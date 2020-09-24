@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { keyBy } from 'lodash';
+import { invert, keyBy } from 'lodash';
 
 /**
  * WordPress dependencies
@@ -28,16 +28,60 @@ export const getWidgets = createRegistrySelector( ( select ) => () => {
 	);
 } );
 
+/**
+ * Returns API widget data for a particular widget ID.
+ *
+ * @param  {number} id  Widget ID
+ * @return {Object}     API widget data for a particular widget ID.
+ */
+export const getWidget = createRegistrySelector(
+	( select ) => ( state, id ) => {
+		const widgets = select( 'core/edit-widgets' ).getWidgets();
+		return widgets[ id ];
+	}
+);
+
 export const getWidgetAreas = createRegistrySelector( ( select ) => () => {
 	if ( ! hasResolvedWidgetAreas( query ) ) {
 		return null;
 	}
 
 	const query = buildWidgetAreasQuery();
-	return select( 'core' )
-		.getEntityRecords( KIND, WIDGET_AREA_ENTITY_TYPE, query )
-		.filter( ( { id } ) => id !== 'wp_inactive_widgets' );
+	return select( 'core' ).getEntityRecords(
+		KIND,
+		WIDGET_AREA_ENTITY_TYPE,
+		query
+	);
 } );
+
+export const getWidgetIdForClientId = ( state, clientId ) => {
+	const widgetIdToClientId = state.mapping;
+	const clientIdToWidgetId = invert( widgetIdToClientId );
+	return clientIdToWidgetId[ clientId ];
+};
+
+/**
+ * Returns widgetArea containing a block identify by given clientId
+ *
+ * @param {string} clientId The ID of the block.
+ * @return {Object} Containing widget area.
+ */
+export const getWidgetAreaForClientId = createRegistrySelector(
+	( select ) => ( state, clientId ) => {
+		const widgetAreas = select( 'core/edit-widgets' ).getWidgetAreas();
+		for ( const widgetArea of widgetAreas ) {
+			const post = select( 'core' ).getEditedEntityRecord(
+				KIND,
+				POST_TYPE,
+				buildWidgetAreaPostId( widgetArea.id )
+			);
+			const clientIds = post.blocks.map( ( block ) => block.clientId );
+			if ( clientIds.includes( clientId ) ) {
+				return widgetArea;
+			}
+		}
+	}
+);
 
 export const getEditedWidgetAreas = createRegistrySelector(
 	( select ) => ( state, ids ) => {
@@ -75,7 +119,10 @@ export const isSavingWidgetAreas = createRegistrySelector(
 				.getWidgetAreas()
 				?.map( ( { id } ) => id );
 		}
-		for ( const id in ids ) {
+		if ( ! ids ) {
+			return false;
+		}
+		for ( const id of ids ) {
 			const isSaving = select( 'core' ).isSavingEntityRecord(
 				KIND,
 				WIDGET_AREA_ENTITY_TYPE,

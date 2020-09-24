@@ -6,7 +6,7 @@ import { useEffect } from '@wordpress/element';
 import {
 	BlockControls,
 	InnerBlocks,
-	__experimentalBlock as Block,
+	__experimentalUseBlockWrapperProps as useBlockWrapperProps,
 } from '@wordpress/block-editor';
 
 /**
@@ -14,6 +14,7 @@ import {
  */
 import QueryToolbar from './query-toolbar';
 import QueryProvider from './query-provider';
+import QueryInspectorControls from './query-inspector-controls';
 
 const TEMPLATE = [ [ 'core/query-loop' ], [ 'core/query-pagination' ] ];
 export default function QueryEdit( {
@@ -21,6 +22,7 @@ export default function QueryEdit( {
 	setAttributes,
 } ) {
 	const instanceId = useInstanceId( QueryEdit );
+	const blockWrapperProps = useBlockWrapperProps();
 	// We need this for multi-query block pagination.
 	// Query parameters for each block are scoped to their ID.
 	useEffect( () => {
@@ -28,21 +30,19 @@ export default function QueryEdit( {
 			setAttributes( { queryId: instanceId } );
 		}
 	}, [ queryId, instanceId ] );
+	const updateQuery = ( newQuery ) =>
+		setAttributes( { query: { ...query, ...newQuery } } );
 	return (
 		<>
+			<QueryInspectorControls query={ query } setQuery={ updateQuery } />
 			<BlockControls>
-				<QueryToolbar
-					query={ query }
-					setQuery={ ( newQuery ) =>
-						setAttributes( { query: { ...query, ...newQuery } } )
-					}
-				/>
+				<QueryToolbar query={ query } setQuery={ updateQuery } />
 			</BlockControls>
-			<Block.div>
+			<div { ...blockWrapperProps }>
 				<QueryProvider>
 					<InnerBlocks template={ TEMPLATE } />
 				</QueryProvider>
-			</Block.div>
+			</div>
 		</>
 	);
 }

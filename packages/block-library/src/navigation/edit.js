@@ -7,13 +7,13 @@ import classnames from 'classnames';
 /**
  * WordPress dependencies
  */
-import { useRef } from '@wordpress/element';
+import { useRef, useState } from '@wordpress/element';
 import {
 	InnerBlocks,
 	InspectorControls,
 	BlockControls,
 	__experimentalUseColors,
-	__experimentalBlock as Block,
+	__experimentalUseBlockWrapperProps as useBlockWrapperProps,
 } from '@wordpress/block-editor';
 import { useDispatch, withSelect, withDispatch } from '@wordpress/data';
 import {
@@ -48,7 +48,15 @@ function Navigation( {
 	// HOOKS
 	//
 	const ref = useRef();
+
+	const [ isPlaceholderShown, setIsPlaceholderShown ] = useState(
+		! hasExistingNavItems
+	);
+
 	const { selectBlock } = useDispatch( 'core/block-editor' );
+
+	const blockProps = useBlockWrapperProps();
+
 	const { TextColor, BackgroundColor, ColorPanel } = __experimentalUseColors(
 		[
 			{ name: 'textColor', property: 'color' },
@@ -85,20 +93,24 @@ function Navigation( {
 		};
 	}
 
-	// If we don't have existing items then show the Placeholder
-	if ( ! hasExistingNavItems ) {
+	//
+	// RENDER
+	//
+
+	if ( isPlaceholderShown ) {
 		return (
-			<Block.div>
+			<div { ...blockProps }>
 				<NavigationPlaceholder
 					ref={ ref }
 					onCreate={ ( blocks, selectNavigationBlock ) => {
+						setIsPlaceholderShown( false );
 						updateInnerBlocks( blocks );
 						if ( selectNavigationBlock ) {
 							selectBlock( clientId );
 						}
 					} }
 				/>
-			</Block.div>
+			</div>
 		);
 	}
 
@@ -107,7 +119,6 @@ function Navigation( {
 		'is-vertical': attributes.orientation === 'vertical',
 	} );
 
-	// UI State: rendered Block UI
 	return (
 		<>
 			<BlockControls>
@@ -167,12 +178,19 @@ function Navigation( {
 			</InspectorControls>
 			<TextColor>
 				<BackgroundColor>
-					<Block.nav className={ blockClassNames }>
+					<nav
+						{ ...blockProps }
+						className={ classnames(
+							blockProps.className,
+							blockClassNames
+						) }
+					>
 						<InnerBlocks
 							ref={ ref }
 							allowedBlocks={ [
 								'core/navigation-link',
 								'core/search',
+								'core/social-links',
 							] }
 							renderAppender={
 								( isImmediateParentOfSelectedBlock &&
@@ -196,7 +214,7 @@ function Navigation( {
 							// inherit templateLock={ 'all' }.
 							templateLock={ false }
 						/>
-					</Block.nav>
+					</nav>
 				</BackgroundColor>
 			</TextColor>
 		</>

@@ -7,7 +7,7 @@ import {
 	BlockContextProvider,
 	InnerBlocks,
 	BlockPreview,
-	__experimentalBlock as Block,
+	__experimentalUseBlockWrapperProps as useBlockWrapperProps,
 } from '@wordpress/block-editor';
 
 /**
@@ -19,11 +19,20 @@ const TEMPLATE = [ [ 'core/post-title' ], [ 'core/post-content' ] ];
 export default function QueryLoopEdit( {
 	clientId,
 	context: {
-		query: { perPage, offset, categoryIds },
+		query: {
+			perPage,
+			offset,
+			categoryIds,
+			tagIds = [],
+			order,
+			orderBy,
+			author,
+			search,
+		} = {},
 		queryContext,
 	},
 } ) {
-	const [ { page } ] = useQueryContext() || queryContext;
+	const [ { page } ] = useQueryContext() || queryContext || [ {} ];
 	const [ activeBlockContext, setActiveBlockContext ] = useState();
 
 	const { posts, blocks } = useSelect(
@@ -31,9 +40,18 @@ export default function QueryLoopEdit( {
 			const query = {
 				offset: perPage ? perPage * ( page - 1 ) + offset : 0,
 				categories: categoryIds,
+				tags: tagIds,
+				order,
+				orderby: orderBy,
 			};
 			if ( perPage ) {
 				query.per_page = perPage;
+			}
+			if ( author ) {
+				query.author = author;
+			}
+			if ( search ) {
+				query.search = search;
 			}
 			return {
 				posts: select( 'core' ).getEntityRecords(
@@ -44,7 +62,18 @@ export default function QueryLoopEdit( {
 				blocks: select( 'core/block-editor' ).getBlocks( clientId ),
 			};
 		},
-		[ perPage, page, offset, categoryIds, clientId ]
+		[
+			perPage,
+			page,
+			offset,
+			categoryIds,
+			tagIds,
+			order,
+			orderBy,
+			clientId,
+			author,
+			search,
+		]
 	);
 
 	const blockContexts = useMemo(
@@ -55,8 +84,10 @@ export default function QueryLoopEdit( {
 			} ) ),
 		[ posts ]
 	);
+	const blockWrapperProps = useBlockWrapperProps();
+
 	return (
-		<Block.div>
+		<div { ...blockWrapperProps }>
 			{ blockContexts &&
 				blockContexts.map( ( blockContext ) => (
 					<BlockContextProvider
@@ -77,6 +108,6 @@ export default function QueryLoopEdit( {
 						) }
 					</BlockContextProvider>
 				) ) }
-		</Block.div>
+		</div>
 	);
 }

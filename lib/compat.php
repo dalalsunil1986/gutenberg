@@ -234,106 +234,6 @@ if ( ! function_exists( 'register_block_type_from_metadata' ) ) {
 }
 
 /**
- * Extends block editor settings to include a list of image dimensions per size.
- *
- * This can be removed when plugin support requires WordPress 5.4.0+.
- *
- * @see https://core.trac.wordpress.org/ticket/49389
- * @see https://core.trac.wordpress.org/changeset/47240
- *
- * @param array $settings Default editor settings.
- *
- * @return array Filtered editor settings.
- */
-function gutenberg_extend_settings_image_dimensions( $settings ) {
-	/*
-	 * Only filter settings if:
-	 * 1. `imageDimensions` is not already assigned, in which case it can be
-	 *    assumed to have been set from WordPress 5.4.0+ default settings.
-	 * 2. `imageSizes` is an array. Plugins may run `block_editor_settings`
-	 *    directly and not provide all properties of the settings array.
-	 */
-	if ( ! isset( $settings['imageDimensions'] ) && ! empty( $settings['imageSizes'] ) ) {
-		$image_dimensions = array();
-		$all_sizes        = wp_get_registered_image_subsizes();
-		foreach ( $settings['imageSizes'] as $size ) {
-			$key = $size['slug'];
-			if ( isset( $all_sizes[ $key ] ) ) {
-				$image_dimensions[ $key ] = $all_sizes[ $key ];
-			}
-		}
-		$settings['imageDimensions'] = $image_dimensions;
-	}
-
-	return $settings;
-}
-add_filter( 'block_editor_settings', 'gutenberg_extend_settings_image_dimensions' );
-
-/**
- * Adds a polyfill for the WHATWG URL in environments which do not support it.
- * The intention in how this action is handled is under the assumption that this
- * code would eventually be placed at `wp_default_packages_vendor`, which is
- * called as a result of `wp_default_packages` via the `wp_default_scripts`.
- *
- * This can be removed when plugin support requires WordPress 5.4.0+.
- *
- * The script registration occurs in `gutenberg_register_vendor_scripts`, which
- * should be removed in coordination with this function.
- *
- * @see gutenberg_register_vendor_scripts
- * @see https://core.trac.wordpress.org/ticket/49360
- * @see https://developer.mozilla.org/en-US/docs/Web/API/URL/URL
- * @see https://developer.wordpress.org/reference/functions/wp_default_packages_vendor/
- *
- * @since 7.3.0
- *
- * @param WP_Scripts $scripts WP_Scripts object.
- */
-function gutenberg_add_url_polyfill( $scripts ) {
-	did_action( 'init' ) && $scripts->add_inline_script(
-		'wp-polyfill',
-		wp_get_script_polyfill(
-			$scripts,
-			array(
-				'window.URL && window.URL.prototype && window.URLSearchParams' => 'wp-polyfill-url',
-			)
-		)
-	);
-}
-add_action( 'wp_default_scripts', 'gutenberg_add_url_polyfill', 20 );
-
-/**
- * Adds a polyfill for DOMRect in environments which do not support it.
- *
- * This can be removed when plugin support requires WordPress 5.4.0+.
- *
- * The script registration occurs in `gutenberg_register_vendor_scripts`, which
- * should be removed in coordination with this function.
- *
- * @see gutenberg_register_vendor_scripts
- * @see gutenberg_add_url_polyfill
- * @see https://core.trac.wordpress.org/ticket/49360
- * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
- * @see https://developer.wordpress.org/reference/functions/wp_default_packages_vendor/
- *
- * @since 7.5.0
- *
- * @param WP_Scripts $scripts WP_Scripts object.
- */
-function gutenberg_add_dom_rect_polyfill( $scripts ) {
-	did_action( 'init' ) && $scripts->add_inline_script(
-		'wp-polyfill',
-		wp_get_script_polyfill(
-			$scripts,
-			array(
-				'window.DOMRect' => 'wp-polyfill-dom-rect',
-			)
-		)
-	);
-}
-add_action( 'wp_default_scripts', 'gutenberg_add_dom_rect_polyfill', 20 );
-
-/**
  * Adds a wp.date.setSettings with timezone abbr parameter
  *
  * This can be removed when plugin support requires WordPress 5.6.0+.
@@ -515,6 +415,27 @@ function gutenberg_render_block_with_assigned_block_context( $pre_render, $parse
 
 		foreach ( $wp_query->tax_query->queried_terms['category']['terms'] as $category_slug_or_id ) {
 			$context['query']['categoryIds'][] = 'slug' === $wp_query->tax_query->queried_terms['category']['field'] ? get_cat_ID( $category_slug_or_id ) : $category_slug_or_id;
+		}
+	}
+
+	if ( isset( $wp_query->tax_query->queried_terms['post_tag'] ) ) {
+		if ( isset( $context['query'] ) ) {
+			$context['query']['tagIds'] = array();
+		} else {
+			$context['query'] = array( 'tagIds' => array() );
+		}
+
+		foreach ( $wp_query->tax_query->queried_terms['post_tag']['terms'] as $tag_slug_or_id ) {
+			$tag_ID = $tag_slug_or_id;
+
+			if ( 'slug' === $wp_query->tax_query->queried_terms['post_tag']['field'] ) {
+				$tag = get_term_by( 'slug', $tag_slug_or_id, 'post_tag' );
+
+				if ( $tag ) {
+					$tag_ID = $tag->term_id;
+				}
+			}
+			$context['query']['tagIds'][] = $tag_ID;
 		}
 	}
 
